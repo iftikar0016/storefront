@@ -20,3 +20,5 @@ export { VariantGalleryDynamic, GallerySkeleton } from "./variant-gallery-dynami
 export { VariantSectionDynamic, VariantSectionSkeleton } from "./variant-section-dynamic";
 export { VariantSectionError } from "./variant-section-error";
 export { getGalleryImages, getDefaultGalleryImages, resolveSelectedVariantId } from "./gallery-utils";
+export { RecentlyViewedTracker } from "./RecentlyViewedTracker";
+export { RecentlyViewed } from "./RecentlyViewed";

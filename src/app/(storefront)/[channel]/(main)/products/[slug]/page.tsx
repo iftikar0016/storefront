@@ -19,6 +19,8 @@ import {
 	VariantSectionSkeleton,
 	VariantSectionError,
 	getDefaultGalleryImages,
+	RecentlyViewed,
+	RecentlyViewedTracker,
 } from "@/ui/components/pdp";
 
 // ============================================================================
@@ -211,7 +213,10 @@ async function ProductShell({
 						</div>
 					</div>
 				</div>
+
+				<RecentlyViewed channel={params.channel} />
 			</main>
+			<RecentlyViewedTracker productId={product.id} />
 		</div>
 	);
 }

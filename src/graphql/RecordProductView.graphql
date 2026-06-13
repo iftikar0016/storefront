@@ -1,0 +1,12 @@
+mutation RecordProductView($id: ID!, $sessionKey: String) {
+	recordProductView(id: $id, sessionKey: $sessionKey) {
+		product {
+			id
+			name
+		}
+		productErrors {
+			field
+			message
+		}
+	}
+}

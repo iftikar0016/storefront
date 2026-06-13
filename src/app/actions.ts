@@ -5,7 +5,12 @@ import { revalidatePath } from "next/cache";
 import { signOutSession } from "@/lib/auth/bff-server";
 import { revalidateStorefrontChrome } from "@/lib/auth/revalidate-storefront-chrome";
 import { executeAuthenticatedGraphQL } from "@/lib/graphql";
-import { CheckoutDeleteLinesDocument, CheckoutLinesUpdateDocument } from "@/gql/graphql";
+import {
+	CheckoutDeleteLinesDocument,
+	CheckoutLinesUpdateDocument,
+	RecordProductViewDocument,
+	RecentlyViewedProductsDocument,
+} from "@/gql/graphql";
 import * as Checkout from "@/lib/checkout";
 
 function revalidateCart(channel: string) {
@@ -88,4 +93,53 @@ export async function updateCartLineQuantity(
 	});
 
 	revalidateCart(channel);
+}
+
+export async function recordProductViewAction(productId: string) {
+	const cookieStore = await cookies();
+	let sessionKey = cookieStore.get("saleor_recently_viewed_session")?.value;
+
+	if (!sessionKey) {
+		sessionKey = crypto.randomUUID();
+		cookieStore.set("saleor_recently_viewed_session", sessionKey, {
+			path: "/",
+			maxAge: 60 * 60 * 24 * 30, // 30 days
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "lax",
+		});
+	}
+
+	const result = await executeAuthenticatedGraphQL(RecordProductViewDocument, {
+		variables: {
+			id: productId,
+			sessionKey,
+		},
+		cache: "no-cache",
+	});
+
+	return result.ok;
+}
+
+export async function getRecentlyViewedProductsAction(channel: string) {
+	const cookieStore = await cookies();
+	const sessionKey = cookieStore.get("saleor_recently_viewed_session")?.value;
+
+	if (!sessionKey) {
+		return [];
+	}
+
+	const result = await executeAuthenticatedGraphQL(RecentlyViewedProductsDocument, {
+		variables: {
+			sessionKey,
+			channel,
+		},
+		cache: "no-cache",
+	});
+
+	if (!result.ok) {
+		return [];
+	}
+
+	return result.data.recentlyViewedProducts;
 }

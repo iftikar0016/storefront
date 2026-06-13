@@ -1,0 +1,5 @@
+query RecentlyViewedProducts($sessionKey: String, $channel: String!) {
+	recentlyViewedProducts(sessionKey: $sessionKey, channel: $channel) {
+		...ProductListItem
+	}
+}
