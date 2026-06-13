@@ -20,6 +20,7 @@ const config = {
 	images: {
 		// WebP only: AVIF cold-encodes add ~500ms+ to first /_next/image hit on Vercel (hurts LCP).
 		formats: ["image/webp"],
+		dangerouslyAllowLocalIP: true,
 		remotePatterns: [
 			{
 				// Saleor Cloud CDN
