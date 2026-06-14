@@ -31,8 +31,19 @@ const config = {
 				hostname: "*.media.saleor.cloud",
 			},
 			{
-				// Allow all hostnames in development (restrict in production)
-				hostname: "*",
+				// Azure Container Apps (for media served from container or API hostname)
+				hostname: "*.azurecontainerapps.io",
+			},
+			{
+				// Azure Blob Storage (for production media assets)
+				hostname: "*.blob.core.windows.net",
+			},
+			{
+				// Localhost for development
+				hostname: "localhost",
+			},
+			{
+				hostname: "127.0.0.1",
 			},
 		],
 	},
