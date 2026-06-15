@@ -1,415 +1,156 @@
-[![Deploy with Vercel](https://vercel.com/button)](<https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fsaleor%2Fstorefront&env=NEXT_PUBLIC_SALEOR_API_URL,NEXT_PUBLIC_DEFAULT_CHANNEL&envDescription=Your%20Saleor%20API%20URL%20is%20the%20GraphQL%20endpoint%20of%20your%20instance%20(e.g.%20https%3A%2F%2Fyour-instance.saleor.cloud%2Fgraphql%2F).%20The%20channel%20slug%20can%20be%20found%20in%20Saleor%20Dashboard%20under%20Configuration%20%3E%20Channels%20(e.g.%20default-channel).%20For%20multi-channel%2C%20set%20STOREFRONT_CHANNELS%20(e.g.%20us%2Cuk)%20and%20optionally%20SALEOR_APP_TOKEN%20for%20the%20footer%20selector.&envLink=https%3A%2F%2Fgithub.com%2Fsaleor%2Fstorefront%23environment-variables&project-name=my-saleor-storefront&repository-name=my-saleor-storefront&demo-title=Saleor%20Next.js%20Storefront&demo-description=Starter%20pack%20for%20building%20performant%20e-commerce%20experiences%20with%20Saleor.&demo-url=https%3A%2F%2Fstorefront.saleor.io%2F&demo-image=https%3A%2F%2Fstorefront-d5h86wzey-saleorcommerce.vercel.app%2Fopengraph-image.png%3F4db0ee8cf66e90af>)
+# AMTS Technical Assignment: Saleor E-Commerce Stack (Azure Edition)
 
-<img width="1920" height="1080" alt="saleor-storefront-paper-fin" src="https://github.com/user-attachments/assets/a8e37c20-35c8-42e0-a9c5-5c0b6097b921" />
-
-<br/>
-<br/>
-<div align="center">
-<img width="180" height="180" alt="apple-touch-icon-dark" src="https://github.com/user-attachments/assets/5327c1d3-86eb-4e5b-811a-81e8a5561d19" />
-  <h1>Paper</h1>
-  <p>A minimal, production-ready storefront template for <a href="https://github.com/saleor/saleor">Saleor</a>.<br/>Clean as a blank page — built to ship with agents and humans.</p>
-</div>
-
-<br/>
-
-<div align="center">
-  <a href="https://saleor.io/start">Learn about headless storefronts</a>
-  <span> · </span>
-  <a href="https://saleor.io/">Website</a>
-  <span> · </span>
-  <a href="https://docs.saleor.io/docs/3.x">Docs</a>
-  <span> · </span>
-  <a href="https://saleor.io/discord">Discord</a>
-</div>
-
-<br/>
-
-> [!TIP]
-> Questions or issues? Check our [Discord](https://saleor.io/discord) for help.
+This repository contains the complete implementation of the **AMTS Technical Assignment**. It integrates the **Saleor Core (Django)** backend and the **Saleor Storefront (Next.js)** into a unified local stack running via Docker Compose, fully configured and deployed on **Microsoft Azure** and **Vercel**.
 
 ---
 
-## Why Paper?
+## 🔗 Live Deployments
 
-**Ship faster, customize everything.** Paper is a new release—expect some rough edges—but every component is built with real-world e-commerce in mind. This is a foundation you can actually build on.
-
-### 🛒 Open Checkout (v2)
-
-The checkout is where most storefronts fall apart or fall short. Paper's doesn't — and **checkout v2** aligns it with the rest of the stack: App Router, Server Components, server actions, and the same BFF session as the storefront (no client-side urql or browser Saleor tokens).
-
-```
-Storefront cart                    Checkout surface
-─────────────                      ────────────────
-src/lib/checkout.ts                src/app/(checkout)/checkout/
-  cookie + mutations        →        CheckoutSessionLoader (RSC)
-@paper/session-bridge                  CheckoutApp → steps + payment
-buildCheckoutPath()                  /checkout/complete?order= (confirmation)
-```
-
-- **Server-first cart** — RSC loads checkout + `me` on entry; client context is a cache of server truth (`CheckoutDataProvider`).
-- **URL-driven steps** — `?step=contact|shipping|payment` updates shallowly (no full page refetch per click); browser Back walks the funnel.
-- **Dedicated confirmation** — `/checkout/complete?order=` is separate from the active cart route.
-- **Extensible payments** — Registry (`INTEGRATED_GATEWAYS`) with Stripe + Dummy; add gateways via `checkout-payment-gateways` skill.
-- **Shared BFF auth** — Sign-in via `/api/auth/login`; session resolved server-side (`resolveSessionUser` — guest / authenticated / unavailable).
-- **Multi-step, mobile-first** — Focused forms, international address fields, composable step components.
-
-**Developer docs:** start at [`skills/saleor-paper-storefront/rules/paper-surfaces.md`](skills/saleor-paper-storefront/rules/paper-surfaces.md), then [`checkout-management.md`](skills/saleor-paper-storefront/rules/checkout-management.md). Forks on the old urql checkout: [`migrations/atomic/2026-06-checkout-v2/`](skills/saleor-paper-storefront/migrations/atomic/2026-06-checkout-v2/MIGRATION.md).
-
-### 🌍 Multi-Channel, Multi-Currency
-
-One codebase, many storefronts. Channel-scoped routing means `/us/products` and `/eu/products` can serve different catalogs, prices, and shipping options—all from the same deployment.
-
-**Storefront channels are explicit.** Saleor may have many channels (B2B, wholesale, internal regions); Paper only exposes the slugs you configure via `STOREFRONT_CHANNELS`. Disallowed channel URLs return 404. For a single-channel store, set `NEXT_PUBLIC_DEFAULT_CHANNEL` only—the footer channel selector is hidden automatically.
-
-### 📱 Product Pages Done Right
-
-The hard parts are solved. Adapt the look, keep the logic.
-
-- **Partial Prerendering (PPR)** — Product name, attributes, and SEO stay in a static cached shell; variant gallery and add-to-cart stream in via Suspense when `searchParams` change.
-- **Multi-attribute variant selection** — Color + Size + Material? Handled. Complex variant matrices just work.
-- **Dynamic pricing** — Sale prices, variant-specific pricing, channel pricing—all reactive.
-- **Image gallery** — Next.js Image optimization, proper aspect ratios, keyboard navigation.
-
-### ♿ Accessibility Built In
-
-Not an afterthought. Focus management on step transitions, keyboard navigation everywhere, semantic HTML, proper ARIA labels. Everyone deserves to shop.
-
-### 🤖 AI-Ready Codebase
-
-Built for front-end developers _and_ AI agents. The codebase includes:
-
-- **`AGENTS.md`** — Architecture overview and quick reference for AI assistants
-- **[`skills/saleor-paper-storefront/`](skills/saleor-paper-storefront/)** — 14 task-specific rules covering GraphQL, caching, variant selection, checkout v2, and more
-- **[saleor/agent-skills](https://github.com/saleor/agent-skills)** — Universal Saleor API patterns; install additional skills (React best practices, composition patterns) via `npx skills add`
-- **Consistent patterns** — Predictable structure that AI tools can navigate and modify confidently
-
-Whether you're pair-programming with Cursor, Claude, or Copilot—the codebase is designed to help them help you.
-
-### ⚡ Bleeding Edge Stack
-
-- **Next.js 16** with App Router and Server Components
-- **React 19** with the latest concurrent features
-- **TypeScript** in strict mode—your IDE will thank you
-- **Tailwind CSS** with design tokens (OKLCH colors, CSS variables)
-- **GraphQL Codegen** for type-safe Saleor API calls
+- **Backend GraphQL API (Azure)**: [https://saleor-api.wittybay-989e7f74.uaenorth.azurecontainerapps.io/graphql/](https://saleor-api.wittybay-989e7f74.uaenorth.azurecontainerapps.io/graphql/)
+- **Next.js Storefront (Vercel)**: [https://storefront-om9i8w6bm-iftikar-alams-projects.vercel.app/](https://storefront-om9i8w6bm-iftikar-alams-projects.vercel.app/)
+- **Admin Superuser Credentials**:
+  - **Email**: `admin@example.com`
+  - **Password**: `admin`
 
 ---
 
-## What's in the Box
+## 🏛️ Project Architecture
 
-| Feature                    | Description                                                                                         |
-| -------------------------- | --------------------------------------------------------------------------------------------------- |
-| **Checkout (v2)**          | RSC + server actions, shallow step URLs, payment registry (Stripe/Dummy), `/checkout/complete`      |
-| **Cart**                   | Slide-over drawer with real-time updates, quantity editing                                          |
-| **Product Pages**          | Multi-attribute variants, image gallery, sticky add-to-cart                                         |
-| **Product Listings**       | Category & collection pages with PPR (cached hero + dynamic filters), pagination                    |
-| **Navigation**             | Dynamic menus from Saleor, mobile hamburger                                                         |
-| **SEO**                    | Metadata, JSON-LD, Open Graph images                                                                |
-| **Caching**                | Cache Components (PPR), named cacheLife tiers, channel-scoped tags, webhooks                        |
-| **Saleor Cloud Paper app** | Saleor Cloud only — Dashboard extension for cache invalidation webhooks and _Preview in storefront_ |
-| **Customer Profile**       | Account dashboard, address book, order history, password change, account deletion                   |
-| **Authentication**         | Login, register, password reset, guest checkout                                                     |
-| **API Resilience**         | Automatic retries, rate limiting, timeouts—handles flaky connections gracefully                     |
+```mermaid
+graph TD
+    Client[Next.js Storefront on Vercel] -->|GraphQL HTTPS / Auth| Core[Saleor Core API on Azure Container Apps]
+    Client -->|Session Headers / JWT| Core
+    Core -->|Database Queries| Postgres[(Azure Database for PostgreSQL)]
+    Core -->|Static & Product Images| Blob[(Azure Blob Storage / Media Container)]
+    Core -->|Cache fallback| Memory[(In-Memory Cache / locmem)]
+    Dashboard[Saleor Dashboard] -->|GraphQL Admin Panel| Core
+```
 
 ---
 
-## Caching Architecture
+## 🌐 Architectural Decisions & Selection of Azure Services
 
-Paper uses **Cache Components** (Partial Prerendering) for optimal performance—static shells load instantly while dynamic content streams in. Learn more in the [Next.js documentation](https://nextjs.org/docs/app/api-reference/directives/use-cache) or see [`skills/saleor-paper-storefront/rules/data-caching.md`](skills/saleor-paper-storefront/rules/data-caching.md) for project-specific implementation details.
+1. **Backend Hosting: Azure Container Apps (ACA)**
+   - **Selection**: Deployed the Saleor Core container to Azure Container Apps.
+   - **Rationale**: ACA is a modern, serverless container platform built on Kubernetes (K8s) and KEDA. It abstracts infrastructure management, enforces HTTPS by default, supports scaling to zero (saving costs for inactive deployments), and handles revisions out of the box. This provides a production-ready setup without the operational complexity of managing a virtual machine or a full AKS cluster.
+2. **Database: Azure Database for PostgreSQL (Flexible Server)**
+   - **Selection**: Configured a Flexible Server PostgreSQL instance (v15).
+   - **Rationale**: Fully managed, production-grade Postgres service. The "Flexible Server" deployment option offers custom maintenance windows, zone-redundancy, and automatic backups.
+3. **Storage: Azure Blob Storage**
+   - **Selection**: Configured hot tier Azure Blob Storage.
+   - **Rationale**: Headless commerce requires highly durable, low-latency, and cost-efficient asset distribution. Static and media assets are routed to public containers (`media` and `private` containers) using the Django Storage backend configured dynamically via the environment.
+4. **CI/CD: GitHub Actions**
+   - **Selection**: Standardized on GitHub Actions for pipeline automation.
+   - **Rationale**: Seamlessly integrates with the workspace, automatically runs our GraphQL unit tests, builds the Docker image, pushes it to Azure Container Registry (ACR), and triggers ACA to deploy the new container revision upon pushing to the `main` branch.
+5. **Storefront Hosting: Vercel**
+   - **Selection**: Deployed the Next.js Storefront to Vercel.
+   - **Rationale**: Next.js is optimized for Vercel, providing instant serverless routing, Edge optimization, and optimal build caching out of the box.
 
-The **display-cached, checkout-live** model ensures fast browsing with accurate checkout:
+---
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         DATA FRESHNESS                              │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   Product Pages          Cart / Checkout         Payment            │
-│   ──────────────         ──────────────          ───────            │
-│                                                                     │
-│   ┌───────────┐         ┌───────────┐          ┌───────────┐       │
-│   │  CACHED   │────────▶│   LIVE    │─────────▶│   LIVE    │       │
-│   │  5 min    │  Add    │  Always   │   Pay    │  Always   │       │
-│   └───────────┘  to     └───────────┘          └───────────┘       │
-│                  Cart                                               │
-│   Fast page loads        Real-time prices       Saleor validates    │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+## 📝 Changelog & Modification Rationale
 
-### How It Works
+### 1. Backend Core (`saleor` - Django)
 
-| Component               | Freshness          | Why                                                                |
-| ----------------------- | ------------------ | ------------------------------------------------------------------ |
-| **Product pages**       | Cached (`catalog`) | Static shell + dynamic variant islands (PPR)                       |
-| **Category/Collection** | Cached (`catalog`) | Cached hero from params; filters/pagination stream in Suspense     |
-| **Homepage featured**   | Cached (`catalog`) | Sync page shell; product grid streams in nested Suspense           |
-| **Navigation / footer** | Cached (`menus`)   | Per-channel tags: `navigation:{channel}`, `footer-menu:{channel}`  |
-| **Cart drawer**         | Always live        | Saleor API with `cache: "no-cache"`                                |
-| **Checkout**            | Always live        | RSC entry + server actions (`cache: "no-cache"`), real-time totals |
+- **Configuration Switch (`django-environ`)**: Refactored [settings.py](file:///c:/Users/iftik/OneDrive/Desktop/AMTS/AMTS/saleor/saleor/settings.py) to parse environments through `django-environ`. This enables seamless secret injection (`DATABASE_URL`, `AZURE_STORAGE_CONNECTION_STRING`, etc.) and isolates configuration variables from the source code.
+- **Windows Host Support**: Refactored `saleor/core/rlimit.py` to handle `ModuleNotFoundError` on Windows systems (where the Unix-specific `resource` module is missing). This allows native development and tests to run locally on Windows machines.
+- **Docker Mount Optimization**: Optimized the `Dockerfile` and `docker-compose.yml` to use standard Docker volume synchronization instead of read-only bind mounts, resolving package synchronization collisions in some Docker Desktop runtimes.
 
-**cacheLife tiers** (see `src/lib/cache-life-profiles.ts`):
+### 2. Azure-Specific Bug Fixes
 
-| Profile    | Fallback TTL | Used for                                    |
-| ---------- | ------------ | ------------------------------------------- |
-| `catalog`  | ~5 min       | Products, categories, collections, homepage |
-| `menus`    | ~1 hr        | Header nav, footer menu                     |
-| `channels` | ~1 day       | Footer channel metadata                     |
+- **Database Seeding Fix (`random_data.py`)**:
+  - _Problem_: The seeding command (`populatedb`) failed on Azure with an `IntegrityError: null value in column "site_id"`. This was due to the seeding script only checking Django field `.name` properties during fixture JSON importing, which filtered out foreign keys like `site_id`, `top_menu_id`, and `bottom_menu_id`.
+  - _Fix_: Modified [random_data.py](file:///c:/Users/iftik/OneDrive/Desktop/AMTS/AMTS/saleor/saleor/core/utils/random_data.py#L1792-L1804) to include `f.attname` in the valid fields check, allowing Django relationship database columns to seed properly.
+- **Throttling/Redis Cache Fallback (`settings.py`)**:
+  - _Problem_: User logins crashed with `redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379`. The authentication endpoint uses throttling, which queries Django's default cache. Since Redis is not deployed on Azure, it crashed.
+  - _Fix_: Implemented dynamic cache routing in [settings.py](file:///c:/Users/iftik/OneDrive/Desktop/AMTS/AMTS/saleor/saleor/settings.py#L988-L995). If the app runs on Azure (presence of `AZURE_STORAGE_CONNECTION_STRING`) and the cache targets a local address, it overrides the engine to fall back to Django's in-memory local cache (`locmem://`).
 
-Webhook `revalidateTag(tag, profile)` clears data immediately; TTL is the safety net when webhooks are missing.
+### 3. "Recently Viewed Products" Feature (End-to-End)
 
-### PPR page patterns
+- **Database Model**: Created a `RecentlyViewedProduct` model in [product/models.py](file:///c:/Users/iftik/OneDrive/Desktop/AMTS/AMTS/saleor/saleor/product/models.py) linking a product with a `user` (for authenticated flows) or `session_key` (for anonymous flows), alongside a `viewed_at` timestamp.
+- **FIFO rolling Capping Manager**: Implemented `RecentlyViewedProductManager` to automatically prune the database history when a new view is registered, ensuring exactly the **last 5 viewed products** are maintained per user/session.
+- **GraphQL API endpoints**:
+  - `recordProductView` Mutation: Safely registers a product view server-side, linking it either to the authenticated user token or an anonymous session cookie.
+  - `recentlyViewedProducts` Query: Retrieves the last 5 viewed products with full product details (name, price, images).
+- **Next.js Storefront Components**:
+  - Created `RecentlyViewedTracker` which issues the mutation asynchronously on PDP (Product Detail Page) loads.
+  - Created the `RecentlyViewed` premium slider component styled in CSS, rendering recently viewed products fetched server-side from the GraphQL query.
 
-Cached GraphQL lives in **`src/lib/catalog/`**, **`src/lib/menus/`**, and **`src/lib/channels/`** — not in layout or page components. Pages are thin orchestrators with nested `<Suspense>` for dynamic islands.
+---
 
-**PDP** — `params` only in the static shell; gallery and variant selection read `searchParams`:
+## 🚀 Local Development Setup
 
-```
-ProductPage (sync)
-└── ProductShell → getProductData "use cache"
-    ├── h1, attributes, JSON-LD, LCP preload
-    ├── Suspense → VariantGalleryDynamic (searchParams)
-    └── Suspense → VariantSectionDynamic (searchParams)
-```
+Follow these steps to run the entire e-commerce stack locally:
 
-**PLP** (category, collection, all products) — cached hero/metadata from params; filter/sort/pagination in a dynamic grid:
+### Prerequisites
 
-```
-Page
-├── CategoryHero ← getCategoryData "use cache"
-└── Suspense → CategoryProducts (searchParams, always fresh fetch)
-```
+- Docker & Docker Compose
+- Node.js v18+ & pnpm (`npm install -g pnpm`)
+- Python 3.12+ (optional, for local non-docker development)
 
-**Homepage** — sync `<section>` shell; featured collection grid in nested Suspense.
+### Step 1: Clone and Spin Up the Infrastructure
 
-**Loading UX** — route-level `loading.tsx` files (products, categories, collections) show skeletons during navigation. The main layout does not wrap `{children}` in `Suspense fallback={null}`.
+1. Clone the repository and navigate to the project directory.
+2. Spin up the backend containers (PostgreSQL, Redis, Saleor API, and Saleor Dashboard):
+   ```bash
+   docker compose up -d
+   ```
 
-**Cache tags** (see `src/lib/cache-manifest.ts`):
+### Step 2: Initialize the Database
 
-| Tag pattern             | Invalidated when                |
-| ----------------------- | ------------------------------- |
-| `product:{slug}`        | Product updated                 |
-| `category:{slug}`       | Category updated                |
-| `collection:{slug}`     | Collection updated              |
-| `navigation:{channel}`  | Main menu changed for channel   |
-| `footer-menu:{channel}` | Footer menu changed for channel |
-| `channels`              | Channel list metadata           |
+1. Run Django migrations to create the database schema:
+   ```bash
+   docker compose run --rm api python manage.py migrate
+   ```
+2. Seed the database with sample products and create the default admin account:
+   ```bash
+   docker compose run --rm api python manage.py populatedb --createsuperuser
+   ```
+   - _Admin User_: `admin@example.com` / `admin`
 
-Featured homepage products use tag `collection:featured-products` (same `catalog` profile as collections).
+### Step 3: Run the Next.js Storefront
 
-### Instant Updates with Webhooks
+1. Navigate to the storefront directory:
+   ```bash
+   cd storefront
+   ```
+2. Install the packages:
+   ```bash
+   pnpm install
+   ```
+3. Generate the GraphQL TypeScript types (which introspects the running Saleor API):
+   ```bash
+   pnpm run generate:all
+   ```
+4. Start the storefront development server:
+   ```bash
+   pnpm run dev
+   ```
 
-**Saleor Cloud (recommended):** Install the [**Saleor Cloud Paper app**](https://github.com/saleor/saleor-paper-app) from Dashboard → Extensions. Available on Saleor Cloud only for now. It registers revalidation webhooks for products, categories, collections, pages, menus, and promotions; discovers cache tags via `/api/cache-info`; and adds _Preview in storefront_ on product pages in Dashboard.
+- Storefront: `http://localhost:3000`
+- Saleor GraphQL API: `http://localhost:8000/graphql/`
+- Saleor Dashboard (Admin panel): `http://localhost:9000`
 
-**Self-hosted / manual setup:**
+---
 
-1. Create webhooks in Saleor Dashboard → Configuration → Webhooks
-2. Point to `https://your-store.com/api/revalidate`
-3. Subscribe to product/category/collection/page events; for menus use `MENU_*` / `MENU_ITEM_*` and include `{ menu: { slug } }` for `navbar` and `footer` menus
-4. Set `SALEOR_WEBHOOK_SECRET` env var
+## 🧪 Running Automated Tests
 
-**Manual revalidation** (requires `REVALIDATE_SECRET`):
+We wrote full integration tests for the "Recently Viewed" database manager and GraphQL endpoints. To execute them inside the local container:
 
 ```bash
-# Single product
-curl "https://your-store.com/api/revalidate?secret=xxx&tag=product:blue-hoodie"
-
-# CMS page (tag only — invalidates getPageData across channels)
-curl "https://your-store.com/api/revalidate?secret=xxx&tag=page:about-us"
-
-# Navigation for one channel (tag or tag + channel query)
-curl "https://your-store.com/api/revalidate?secret=xxx&tag=navigation:us"
-curl "https://your-store.com/api/revalidate?secret=xxx&tag=navigation&channel=us"
-
-# All tags for every storefront channel
-curl "https://your-store.com/api/revalidate?secret=xxx&all=1"
+docker compose run --rm api pytest saleor/graphql/product/tests/test_recently_viewed.py
 ```
-
-Without webhooks? TTL handles it—cached data expires per the `catalog` / `menus` / `channels` profiles above.
-
-### Why This Is Safe
-
-- **Saleor is the source of truth**: `checkoutLinesAdd` calculates prices server-side
-- **Cart always fetches fresh**: Users see current prices before checkout
-- **Payment validates**: `checkoutComplete` uses real-time data
-
-> 📚 **Deep dive**: See [`skills/saleor-paper-storefront/rules/data-caching.md`](skills/saleor-paper-storefront/rules/data-caching.md) for the full architecture, Cache Components (PPR), webhook setup, and debugging guide.
 
 ---
 
-## Quick Start
+## ⚠️ Trade-offs & Limitations
 
-> [!NOTE]
-> New to Saleor? Check out [saleor.io/start](https://saleor.io/start) to learn how storefronts work underneath.
-
-### 1. Get a Saleor Backend
-
-**Option A:** Free [Saleor Cloud](https://cloud.saleor.io/?utm_source=storefront&utm_medium=github) account (recommended)
-
-**Option B:** [Run locally with Docker](https://docs.saleor.io/docs/3.x/setup/docker-compose)
-
-### 2. Clone & Configure
-
-```bash
-# Using Saleor CLI (recommended)
-npm i -g @saleor/cli@latest
-saleor storefront create --url https://{YOUR_INSTANCE}/graphql/
-
-# Or manually
-git clone https://github.com/saleor/storefront.git
-cd storefront
-cp .env.example .env
-pnpm install
-```
-
-Edit `.env` with your Saleor instance details:
-
-```bash
-NEXT_PUBLIC_SALEOR_API_URL=https://your-instance.saleor.cloud/graphql/
-NEXT_PUBLIC_DEFAULT_CHANNEL=default-channel  # Your Saleor channel slug
-```
-
-**Multi-channel** (recommended — explicit allowlist):
-
-```bash
-STOREFRONT_CHANNELS=us,uk,eu
-NEXT_PUBLIC_DEFAULT_CHANNEL=us
-SALEOR_APP_TOKEN=...  # Server-side only — footer currency selector metadata
-```
-
-> **Finding your channel slug:** In Saleor Dashboard → Configuration → Channels → copy the slug
-
-> **Note:** `SALEOR_APP_TOKEN` alone no longer auto-discovers every Saleor channel. Set `STOREFRONT_CHANNELS` or opt in with `STOREFRONT_DISCOVER_CHANNELS=true` (see [Environment Variables](#environment-variables)).
-
-### 3. Run
-
-```bash
-pnpm dev
-```
-
-Open [localhost:3000](http://localhost:3000). That's it.
-
----
-
-## Development
-
-### Commands
-
-```bash
-pnpm dev                    # Start dev server
-pnpm build                  # Production build
-pnpm run generate           # Regenerate GraphQL types (storefront)
-pnpm run generate:checkout  # Regenerate GraphQL types (checkout)
-```
-
-### Project Structure
-
-```
-src/
-├── app/                    # Next.js App Router
-│   ├── [channel]/          # Channel-scoped routes
-│   ├── (storefront)/[channel]/  # Browse, cart, account
-│   └── (checkout)/checkout/     # Checkout route (/checkout)
-├── session-bridge/         # @paper/session-bridge — storefront ↔ checkout handoff
-├── checkout/               # Checkout UI, providers, payment registry (GraphQL via server actions)
-├── graphql/                # GraphQL queries
-├── gql/                    # Generated types (don't edit)
-├── lib/                    # Server utilities & cached data layer
-│   ├── catalog/            # getCategoryData, getCollectionData, getFeaturedProducts
-│   ├── menus/              # getNavbarMenuItems, getFooterMenuItems
-│   ├── channels/           # getCachedChannelsList
-│   ├── cache-manifest.ts   # Tag registry + cacheLife mapping
-│   └── cache-life-profiles.ts
-├── ui/components/          # UI components
-│   ├── account/            # Customer profile & address book
-│   ├── pdp/                # Product detail page
-│   ├── plp/                # Product listing page
-│   ├── cart/               # Cart drawer
-│   └── ui/                 # Primitives (Button, Badge, etc.)
-└── styles/brand.css        # Design tokens
-```
-
-### For AI Agents
-
-If you're working with AI coding assistants, point them to:
-
-- **`AGENTS.md`** — Architecture, commands, gotchas
-- **`skills/saleor-paper-storefront/`** — 13 project-specific rules (GraphQL, caching, checkout, etc.)
-- **[saleor/agent-skills](https://github.com/saleor/agent-skills)** — Universal Saleor patterns and optional community skills (React best practices, composition patterns, etc.)
-
-To install skills for agent auto-discovery:
-
-```shell
-# Project skill (already in this repo)
-npx skills add . --skill saleor-paper-storefront
-
-# Universal Saleor API patterns
-npx skills add saleor/agent-skills --skill saleor-storefront
-```
-
-### Environment Variables
-
-```env
-# Required
-NEXT_PUBLIC_SALEOR_API_URL=https://your-instance.saleor.cloud/graphql/
-NEXT_PUBLIC_DEFAULT_CHANNEL=default-channel  # Fallback channel; root "/" redirects here
-
-# Multi-channel (recommended)
-STOREFRONT_CHANNELS=us,uk,eu               # Comma-separated allowlist — routes, revalidation, footer
-
-# Optional
-NEXT_PUBLIC_STOREFRONT_URL=                  # Canonical URLs and OG images
-REVALIDATE_SECRET=                           # Manual cache invalidation (GET /api/revalidate)
-SALEOR_WEBHOOK_SECRET=                       # Webhook HMAC verification
-SALEOR_APP_TOKEN=                            # Server-side: footer channel metadata (never exposed to client)
-STOREFRONT_DISCOVER_CHANNELS=true            # Opt-in: discover ALL active Saleor channels from API
-                                             # (not recommended when Saleor has many channels; prefer STOREFRONT_CHANNELS)
-```
-
-**Channel resolution order** (`getStorefrontChannelSlugs`):
-
-1. `STOREFRONT_CHANNELS` — explicit allowlist _(recommended)_
-2. `STOREFRONT_DISCOVER_CHANNELS=true` + `SALEOR_APP_TOKEN` — all active channels from API
-3. `NEXT_PUBLIC_DEFAULT_CHANNEL` only — single-channel storefront
-
----
-
-## Payments
-
-The checkout architecture supports Saleor payment apps like [Adyen](https://docs.saleor.io/docs/3.x/developer/app-store/apps/adyen) and [Stripe](https://docs.saleor.io/docs/3.x/developer/app-store/apps/stripe). The heavy lifting is done—integrating your gateway requires minimal work compared to building from scratch.
-
----
-
-## Customization
-
-Paper works as a reference implementation and as a starting point for your own storefront. Start here:
-
-- **Colors & typography** → `src/styles/brand.css`
-- **Components** → `src/ui/components/`
-- **Checkout flow** → `src/checkout/views/SaleorCheckout/`
-
-The design token system uses CSS custom properties—swap the entire color palette by editing a few lines.
-
----
-
-## Next Steps
-
-Features planned for future development:
-
-- **Filtering logic iteration.** Fetching attributes from API for dynamic product filters.
-- **Opinionated model for standard content.** Moving currently hardcoded stuff like Credibility or Free checkout information to API models.
-
----
-
-## License
-
-[FSL-1.1-ALv2](./LICENSE) (Functional Source License, Version 1.1, ALv2 Future License) — use it, modify it, ship it. Build your storefront, run your business. The license converts to Apache 2.0 after two years.
-
-Want to offer it as a managed service? [Let's talk](https://saleor.io/contact).
-
----
-
-<div align="center">
-  <br/>
-  <p>Built with 🖤 by the <a href="https://saleor.io">Saleor</a> team</p>
-</div>
+1. **Local Memory Cache Fallback on Azure**
+   - _Trade-off_: We fell back to Django's `locmem://` cache backend instead of spinning up Azure Cache for Redis.
+   - _Limitation_: Because `locmem` keeps cache in the container's memory, if the Container App scales horizontally to multiple replicas, the throttling cache is not shared. For production high-traffic scaling, an Azure Cache for Redis instance should be provisioned and configured.
+2. **Anonymous Session Key Generation**
+   - _Trade-off_: Anonymous session keys are generated by the storefront and passed via request headers.
+   - _Limitation_: If the user clears their browser cookies/storage, their anonymous session history is lost.
+3. **Synchronous Product View Writes**
+   - _Trade-off_: Product views are written to the database synchronously on the request thread.
+   - _Limitation_: For massive write-heavy environments, this could introduce slight query overhead. In a larger production deployment, view writes should be offloaded to Celery background tasks or an asynchronous message queue.
